@@ -1,0 +1,33 @@
+name: mytb
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flutter_local_notifications: ^9.0.0
+  image_picker: ^0.8.7+3  # Utilise la dernière version disponible
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+
+flutter:
+  uses-material-design: true
+  assets:
+    - ./assets/isoniazide100.jpg
+    - ./assets/rifampicine150.jpg
+    - ./assets/pyrazinamide500.jpg
+    - ./assets/ethambutol100.jpg
+    - ./assets/vitamine_b6.jpg
+
+
