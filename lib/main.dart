@@ -8,7 +8,7 @@ import 'screens/appointment_screen.dart';
 import 'screens/info_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-void main()async {
+void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -42,7 +42,8 @@ class MainScreen extends StatefulWidget {
 signInWithGoogle() async {
   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-  final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+  final GoogleSignInAuthentication googleAuth =
+      await googleUser!.authentication;
 
   final credential = GoogleAuthProvider.credential(
     accessToken: googleAuth.accessToken,
