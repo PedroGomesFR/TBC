@@ -40,6 +40,8 @@ List<Treatment> predefinedTreatments = [
 ];
 
 class TreatmentScreen extends StatefulWidget {
+  const TreatmentScreen({super.key});
+
   @override
   _TreatmentScreenState createState() => _TreatmentScreenState();
 }

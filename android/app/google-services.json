@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "527609679972",
+    "project_id": "tuberculoseapp",
+    "storage_bucket": "tuberculoseapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:527609679972:android:e08a6af71055cfd4ae8f71",
+        "android_client_info": {
+          "package_name": "com.example.mytb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoZKmVTat__r3zLJdP2D4Dutufnowkbaw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

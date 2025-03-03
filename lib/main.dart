@@ -1,14 +1,23 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:mytb/firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/treatment_screen.dart';
 import 'screens/appointment_screen.dart';
 import 'screens/info_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {
+void main()async {
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyTuberculoseApp());
 }
 
 class MyTuberculoseApp extends StatelessWidget {
+  const MyTuberculoseApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -24,8 +33,23 @@ class MyTuberculoseApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
+  const MainScreen({super.key});
+
   @override
   _MainScreenState createState() => _MainScreenState();
+}
+
+signInWithGoogle() async {
+  final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+  final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+
+  final credential = GoogleAuthProvider.credential(
+    accessToken: googleAuth.accessToken,
+    idToken: googleAuth.idToken,
+  );
+
+  return await FirebaseAuth.instance.signInWithCredential(credential);
 }
 
 class _MainScreenState extends State<MainScreen> {
