@@ -11,7 +11,7 @@ class AppointmentScreen extends StatefulWidget {
 class _AppointmentScreenState extends State<AppointmentScreen> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _selectedDay = DateTime.now();
-  Map<DateTime, List<String>> _appointments = {};
+  final Map<DateTime, List<String>> _appointments = {};
 
   void _addAppointment() {
     TextEditingController controller = TextEditingController();
@@ -19,13 +19,17 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Ajouter un rendez-vous'),
-        content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'Détails du rendez-vous')),
+        content: TextField(
+            controller: controller,
+            decoration:
+                const InputDecoration(hintText: 'Détails du rendez-vous')),
         actions: [
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
                 setState(() {
-                  _appointments[_selectedDay] = (_appointments[_selectedDay] ?? [])..add(controller.text);
+                  _appointments[_selectedDay] =
+                      (_appointments[_selectedDay] ?? [])..add(controller.text);
                 });
               }
               Navigator.pop(context);
@@ -71,13 +75,15 @@ class _AppointmentScreenState extends State<AppointmentScreen> {
           ),
           Expanded(
             child: ListView(
-              children: (_appointments[_selectedDay] ?? []).map((appointment) => ListTile(
-                title: Text(appointment),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () => _removeAppointment(appointment),
-                ),
-              )).toList(),
+              children: (_appointments[_selectedDay] ?? [])
+                  .map((appointment) => ListTile(
+                        title: Text(appointment),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _removeAppointment(appointment),
+                        ),
+                      ))
+                  .toList(),
             ),
           ),
         ],

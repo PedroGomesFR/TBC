@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'database_helper.dart';
 
 class Treatment {
   final String name;
@@ -13,30 +14,50 @@ class Treatment {
 
 List<Treatment> predefinedTreatments = [
   Treatment(
-      name: "Isoniazide",
-      image: "../assets/Isoniazide100.jpg",
+      name: "Rifadine 300mg",
+      image: "assets/rifadine_300mg.jpg",
       description:
           "Antibiotique utilisé pour traiter la tuberculose. Effets secondaires : nausées, douleurs abdominales. 1 comprimé le matin à jeun."),
   Treatment(
-      name: "Rifampicine",
-      image: "../assets/rifampicine150.jpg",
+      name: "Rifater",
+      image: "assets/rifater.jpg",
       description:
-          "Antibiotique puissant. Effets secondaires : troubles digestifs. 2 comprimés le matin à jeun."),
+          "Combinaison d'antibiotiques. Effets secondaires : troubles digestifs. 2 comprimés le matin à jeun."),
   Treatment(
-      name: "Pyrazinamide",
-      image: "../assets/pyrazinamide500.jpg",
+      name: "Rifinah 300mg / 150mg",
+      image: "assets/rifinah_150mg300mg.jpg",
       description:
           "Antituberculeux. Effets secondaires : fatigue, douleurs articulaires. 1 comprimé après le repas."),
   Treatment(
-      name: "Ethambutol",
-      image: "../assets/ethambutol100.jpg",
+      name: "DEXAMBUTOL 500mg",
+      image: "assets/dexambutol_500mg.jpg",
       description:
           "Traitement pour la tuberculose. Effets secondaires : troubles visuels. 1 comprimé avec un grand verre d'eau."),
   Treatment(
-      name: "Vitamine B6",
-      image: "../assets/vitamine_b6.jpg",
+      name: "Myambutol 400mg",
+      image: "assets/myambutol_400mg.jpg",
       description:
-          "Supplément vitaminique. Effets secondaires rares. 1 comprimé par jour."),
+          "Antituberculeux. Effets secondaires : troubles visuels. 1 comprimé avec un grand verre d'eau."),
+  Treatment(
+      name: "Pirilène 500mg",
+      image: "assets/pirilene_500mg.jpg",
+      description:
+          "Anti-inflammatoire. Effets secondaires rares. 1 comprimé par jour."),
+  Treatment(
+      name: "Rimactan 300mg",
+      image: "assets/rimactan_300mg.jpg",
+      description:
+          "Antibiotique puissant. Effets secondaires : troubles digestifs. 2 comprimés le matin à jeun."),
+  Treatment(
+      name: "RIMIFON 50mg",
+      image: "assets/rimifon_50mg.jpg",
+      description:
+          "Antituberculeux. Effets secondaires : nausées, douleurs abdominales. 1 comprimé le matin à jeun."),
+  Treatment(
+      name: "RIMIFON 150mg",
+      image: "assets/rimifon_150mg.jpg",
+      description:
+          "Antituberculeux. Effets secondaires : nausées, douleurs abdominales. 1 comprimé le matin à jeun."),
 ];
 
 class TreatmentScreen extends StatefulWidget {
@@ -50,11 +71,13 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
   List<Treatment> myTreatments = [];
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+  final DatabaseHelper _databaseHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
     _initializeNotifications();
+    _loadTreatments();
   }
 
   void _initializeNotifications() async {
@@ -65,126 +88,42 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  void _addTreatmentToList(Treatment treatment) {
+  void _loadTreatments() async {
+    List<Map<String, dynamic>> treatments =
+        await _databaseHelper.getTreatments();
     setState(() {
-      if (!myTreatments.contains(treatment)) {
-        myTreatments.add(treatment);
-      }
+      myTreatments = treatments.map((treatment) {
+        Treatment t = Treatment(
+          name: treatment['name'],
+          image: treatment['image'],
+          description: treatment['description'],
+        );
+        t.reminders.add(TimeOfDay(
+          hour: int.parse(treatment['reminderTime'].split(':')[0]),
+          minute: int.parse(treatment['reminderTime'].split(':')[1]),
+        ));
+        return t;
+      }).toList();
     });
   }
 
-  void _setReminder(Treatment treatment, TimeOfDay time) {
-    setState(() {
-      treatment.reminders.add(time);
-    });
+  void _addTreatmentToList(Treatment treatment, TimeOfDay time) async {
+    await _databaseHelper.insertTreatment(
+        treatment, '${time.hour}:${time.minute}');
+    _loadTreatments();
   }
 
-  void _removeTreatment(Treatment treatment) {
-    setState(() {
-      myTreatments.remove(treatment);
-    });
+  void _removeTreatment(int id) async {
+    await _databaseHelper.deleteTreatment(id);
+    _loadTreatments();
   }
 
-  void _removeReminder(Treatment treatment, TimeOfDay time) {
-    setState(() {
-      treatment.reminders.remove(time);
-    });
-  }
-
-  void _showTimePicker(Treatment treatment, {TimeOfDay? timeToModify}) async {
-    TimeOfDay? time = await showTimePicker(
-        context: context, initialTime: timeToModify ?? TimeOfDay.now());
+  void _showTimePicker(Treatment treatment) async {
+    TimeOfDay? time =
+        await showTimePicker(context: context, initialTime: TimeOfDay.now());
     if (time != null) {
-      if (timeToModify != null) {
-        _removeReminder(treatment, timeToModify);
-      }
-      _setReminder(treatment, time);
+      _addTreatmentToList(treatment, time);
     }
-  }
-
-  void _showTreatmentInfo(BuildContext context, Treatment treatment) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(treatment.name),
-          content: Text(treatment.description),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Fermer"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showZoomedImage(BuildContext context, String image) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          child: InteractiveViewer(
-            panEnabled: true,
-            boundaryMargin: EdgeInsets.all(20),
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Image.asset(image),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showAddTreatmentDialog() {
-    String name = '';
-    String description = '';
-    String image = '';
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Ajouter un Traitement'),
-          content: Column(
-            children: [
-              TextField(
-                onChanged: (value) => name = value,
-                decoration:
-                    const InputDecoration(labelText: 'Nom du traitement'),
-              ),
-              TextField(
-                onChanged: (value) => description = value,
-                decoration: const InputDecoration(
-                    labelText: 'Description (facultatif)'),
-              ),
-              TextField(
-                onChanged: (value) => image = value,
-                decoration:
-                    const InputDecoration(labelText: 'Image URL (facultatif)'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                if (name.isNotEmpty) {
-                  final newTreatment = Treatment(
-                      name: name, image: image, description: description);
-                  _addTreatmentToList(newTreatment);
-                  Navigator.pop(context);
-                }
-              },
-              child: const Text('Ajouter'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Annuler'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -202,10 +141,6 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                     "Catalogue des Traitements",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  ElevatedButton(
-                    onPressed: _showAddTreatmentDialog,
-                    child: const Text('Ajouter un Traitement'),
-                  ),
                   Expanded(
                     child: ListView.builder(
                       itemCount: predefinedTreatments.length,
@@ -215,27 +150,12 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                           elevation: 5,
                           margin: EdgeInsets.symmetric(vertical: 8),
                           child: ListTile(
-                            leading: GestureDetector(
-                              onTap: () =>
-                                  _showZoomedImage(context, treatment.image),
-                              child: Image.asset(treatment.image,
-                                  width: 50, height: 50),
-                            ),
+                            leading: Image.asset(treatment.image,
+                                width: 50, height: 50),
                             title: Text(treatment.name),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.info_outline),
-                                  onPressed: () =>
-                                      _showTreatmentInfo(context, treatment),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  onPressed: () =>
-                                      _addTreatmentToList(treatment),
-                                ),
-                              ],
+                            trailing: IconButton(
+                              icon: const Icon(Icons.add_circle_outline),
+                              onPressed: () => _showTimePicker(treatment),
                             ),
                             onTap: () => _showTreatmentInfo(context, treatment),
                           ),
@@ -274,28 +194,13 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                                   trailing: IconButton(
                                     icon: const Icon(Icons.delete,
                                         color: Colors.red),
-                                    onPressed: () =>
-                                        _removeTreatment(treatment),
+                                    onPressed: () => _removeTreatment(index),
                                   ),
                                 ),
-                                const SizedBox(height: 5),
                                 ...treatment.reminders.map((time) => ListTile(
                                       title: Text(
                                           "${time.hour}:${time.minute.toString().padLeft(2, '0')}"),
-                                      trailing: IconButton(
-                                        icon: const Icon(Icons.edit,
-                                            color: Colors.blue),
-                                        onPressed: () => _showTimePicker(
-                                            treatment,
-                                            timeToModify: time),
-                                      ),
                                     )),
-                                TextButton.icon(
-                                  icon: const Icon(Icons.add_alarm,
-                                      color: Colors.green),
-                                  label: const Text("Ajouter un rappel"),
-                                  onPressed: () => _showTimePicker(treatment),
-                                ),
                               ],
                             ),
                           ),
@@ -309,6 +214,24 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showTreatmentInfo(BuildContext context, Treatment treatment) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(treatment.name),
+          content: Text(treatment.description),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Fermer"),
+            ),
+          ],
+        );
+      },
     );
   }
 }

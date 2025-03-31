@@ -10,6 +10,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  sqflite: ^2.0.0+4
+  path: ^1.8.0
   cupertino_icons: ^1.0.8
   firebase_core: ^3.12.1
   flutter_local_notifications: ^18.0.1
@@ -32,10 +34,14 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - ./assets/isoniazide100.jpg
-    - ./assets/rifampicine150.jpg
-    - ./assets/pyrazinamide500.jpg
-    - ./assets/ethambutol100.jpg
-    - ./assets/vitamine_b6.jpg
+    - ./assets/DEXAMBUTOL_500mg.jpg
+    - ./assets/MYAMBUTOL_400mg.jpg
+    - ./assets/PIRILENE_500mg.jpg
+    - ./assets/rifadine_300mg.jpg
+    - ./assets/rifater.jpg
+    - ./assets/rifinah_150mg300mg.jpg
+    - ./assets/RIMACTAN_300mg.jpg
+    - ./assets/RIMIFON_50mg.jpg
+    - ./assets/RIMIFON_150mg.jpg
 
 

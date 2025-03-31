@@ -5,6 +5,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -155,7 +157,8 @@ class EditProfileScreen extends StatefulWidget {
   final String? userId;
   final Function(String) onDisplayNameUpdated;
 
-  EditProfileScreen({this.userId, required this.onDisplayNameUpdated});
+  const EditProfileScreen(
+      {super.key, this.userId, required this.onDisplayNameUpdated});
 
   @override
   _EditProfileScreenState createState() => _EditProfileScreenState();
