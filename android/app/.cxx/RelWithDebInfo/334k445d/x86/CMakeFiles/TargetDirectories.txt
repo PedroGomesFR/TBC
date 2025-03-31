@@ -1,0 +1,2 @@
+D:/wamp64/www/TBC/android/app/.cxx/RelWithDebInfo/334k445d/x86/CMakeFiles/edit_cache.dir
+D:/wamp64/www/TBC/android/app/.cxx/RelWithDebInfo/334k445d/x86/CMakeFiles/rebuild_cache.dir
