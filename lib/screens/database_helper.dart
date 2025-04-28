@@ -31,29 +31,64 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY,
         name TEXT,
         image TEXT,
-        description TEXT,
-        reminderTime TEXT
+        description TEXT
+      )
+    ''');
+    await db.execute('''
+      CREATE TABLE reminders(
+        id INTEGER PRIMARY KEY,
+        treatmentId INTEGER,
+        reminderTime TEXT,
+        FOREIGN KEY (treatmentId) REFERENCES treatments(id)
       )
     ''');
   }
 
-  Future<void> insertTreatment(Treatment treatment, String reminderTime) async {
+  Future<void> insertTreatment(Treatment treatment) async {
     Database db = await database;
-    await db.insert(
+    int treatmentId = await db.insert(
       'treatments',
       {
         'name': treatment.name,
         'image': treatment.image,
         'description': treatment.description,
-        'reminderTime': reminderTime,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    for (var time in treatment.reminders) {
+      await db.insert(
+        'reminders',
+        {
+          'treatmentId': treatmentId,
+          'reminderTime': '${time.hour}:${time.minute}',
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+    }
   }
 
-  Future<List<Map<String, dynamic>>> getTreatments() async {
+  Future<Map<Treatment, List<String>>> getTreatmentsWithReminders() async {
     Database db = await database;
-    return await db.query('treatments');
+    List<Map<String, dynamic>> treatments = await db.query('treatments');
+    Map<Treatment, List<String>> treatmentMap = {};
+
+    for (var treatmentData in treatments) {
+      Treatment treatment = Treatment.fromMap(treatmentData);
+
+      List<Map<String, dynamic>> reminders = await db.query(
+        'reminders',
+        where: 'treatmentId = ?',
+        whereArgs: [treatmentData['id']],
+      );
+
+      List<String> reminderTimes = reminders
+          .map((reminder) => reminder['reminderTime'] as String)
+          .toList();
+
+      treatmentMap[treatment] = reminderTimes;
+    }
+
+    return treatmentMap;
   }
 
   Future<void> deleteTreatment(int id) async {
@@ -61,6 +96,11 @@ class DatabaseHelper {
     await db.delete(
       'treatments',
       where: 'id = ?',
+      whereArgs: [id],
+    );
+    await db.delete(
+      'reminders',
+      where: 'treatmentId = ?',
       whereArgs: [id],
     );
   }

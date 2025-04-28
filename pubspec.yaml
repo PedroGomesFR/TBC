@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   sqflite: ^2.0.0+4
+  open_file: ^3.2.1
   path: ^1.8.0
   cupertino_icons: ^1.0.8
   firebase_core: ^3.12.1
@@ -30,18 +31,17 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 
-
 flutter:
   uses-material-design: true
   assets:
-    - ./assets/DEXAMBUTOL_500mg.jpg
-    - ./assets/MYAMBUTOL_400mg.jpg
-    - ./assets/PIRILENE_500mg.jpg
-    - ./assets/rifadine_300mg.jpg
-    - ./assets/rifater.jpg
-    - ./assets/rifinah_150mg300mg.jpg
-    - ./assets/RIMACTAN_300mg.jpg
-    - ./assets/RIMIFON_50mg.jpg
-    - ./assets/RIMIFON_150mg.jpg
+    - assets/img/DEXAMBUTOL_500mg.jpg
+    - assets/img/MYAMBUTOL_400mg.jpg
+    - assets/img/PIRILENE_500mg.jpg
+    - assets/img/rifadine_300mg.jpg
+    - assets/img/rifater.jpg
+    - assets/img/rifinah_150mg300mg.jpg
+    - assets/img/RIMACTAN_300mg.jpg
+    - assets/img/RIMIFON_50mg.jpg
+    - assets/img/RIMIFON_150mg.jpg
 
 

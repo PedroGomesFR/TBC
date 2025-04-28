@@ -25,7 +25,7 @@ class MyTuberculoseApp extends StatelessWidget {
       title: 'MyTuberculose',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: const Color.fromARGB(255, 196, 76, 76),
+        scaffoldBackgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
       home: MainScreen(),
     );
