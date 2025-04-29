@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
 import 'package:mytuberculose_app/data/models/quiz_model.dart';
 // TODO: Import AppLocalizations when needed
 
@@ -15,12 +16,44 @@ class _QuizScreenState extends State<QuizScreen> {
   int _score = 0;
   bool _quizCompleted = false;
   List<int?> _selectedAnswers = []; // Store index of selected answer for each question
+  int? _highScore;
 
   @override
   void initState() {
     super.initState();
-    // Initialize selected answers list
+    _loadHighScore();
+    _resetQuizState();
+  }
+
+  void _resetQuizState() {
     _selectedAnswers = List<int?>.filled(quizQuestions.length, null);
+    _currentQuestionIndex = 0;
+    _score = 0;
+    _quizCompleted = false;
+  }
+
+  Future<void> _loadHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _highScore = prefs.getInt('quizHighScore');
+    });
+  }
+
+  Future<void> _saveScoreAndMaybeUpdateHighScore() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Save current score (optional, could just save high score)
+    // await prefs.setInt('lastQuizScore', _score);
+
+    // Update high score if current score is better
+    if (_highScore == null || _score > _highScore!) {
+      await prefs.setInt('quizHighScore', _score);
+      setState(() {
+        _highScore = _score;
+      });
+      print('New high score saved: $_score');
+    } else {
+      print('Score saved: $_score (High score: $_highScore)');
+    }
   }
 
   void _answerQuestion(int selectedOptionIndex) {
@@ -28,15 +61,19 @@ class _QuizScreenState extends State<QuizScreen> {
 
     setState(() {
       _selectedAnswers[_currentQuestionIndex] = selectedOptionIndex;
-      // Check if the selected option is correct
-      // Note: This assumes only one correct answer per question for scoring.
-      // The model supports multiple correct answers, but scoring logic needs adjustment if needed.
+      // Basic scoring: +1 if the selected option is marked as correct.
+      // Needs refinement for questions with multiple correct answers.
       if (quizQuestions[_currentQuestionIndex].options[selectedOptionIndex].isCorrect) {
-        // Simple scoring: +1 for correct. Needs refinement if multiple answers are correct.
-        // Check if this question was already answered correctly in a previous attempt (if allowing re-tries)
-        // For now, just increment score if the selected one is marked as correct.
-        // A more robust check would verify if *all* correct options are selected and *no* incorrect ones are.
-        _score++; // Basic scoring, needs refinement for multiple correct answers
+         // Check if *all* correct answers are selected and *no* incorrect ones are for multi-answer questions.
+         // For simplicity now, just check if *this* selected one is correct.
+         bool isMultiAnswer = quizQuestions[_currentQuestionIndex].options.where((o) => o.isCorrect).length > 1;
+         if (!isMultiAnswer) {
+            _score++;
+         } else {
+            // Basic handling for multi-answer: give point only if this specific one is correct.
+            // A better approach would track all selections for the question.
+            _score++; // Needs better logic for multi-select scoring
+         }
       }
 
       // Move to the next question or finish the quiz
@@ -44,7 +81,7 @@ class _QuizScreenState extends State<QuizScreen> {
         _currentQuestionIndex++;
       } else {
         _quizCompleted = true;
-        // TODO: Save score locally (Task 3.4.3)
+        _saveScoreAndMaybeUpdateHighScore(); // Save score when quiz finishes
         print('Quiz completed! Score: $_score / ${quizQuestions.length}');
       }
     });
@@ -52,10 +89,7 @@ class _QuizScreenState extends State<QuizScreen> {
 
   void _resetQuiz() {
     setState(() {
-      _currentQuestionIndex = 0;
-      _score = 0;
-      _quizCompleted = false;
-      _selectedAnswers = List<int?>.filled(quizQuestions.length, null);
+      _resetQuizState();
     });
   }
 
@@ -135,6 +169,14 @@ class _QuizScreenState extends State<QuizScreen> {
               'Votre score : $_score / ${quizQuestions.length}',
               style: Theme.of(context).textTheme.titleLarge,
             ),
+            if (_highScore != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  'Meilleur score : $_highScore / ${quizQuestions.length}',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
             const SizedBox(height: 30),
             // TODO: Add review answers button?
             ElevatedButton(
