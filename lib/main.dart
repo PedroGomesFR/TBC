@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:mytuberculose_app/presentation/providers/auth_provider.dart'; // Import AuthProvider
+import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
+import 'package:mytuberculose_app/presentation/providers/medication_provider.dart'; // Import MedicationProvider
+import 'package:mytuberculose_app/presentation/screens/main_navigation_screen.dart'; // Import Main Navigation
 
 void main() {
   // TODO: Initialize Supabase here when the key is available
@@ -19,11 +21,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Wrap the MaterialApp with MultiProvider to provide the Auth state
+    // Wrap the MaterialApp with MultiProvider to provide the states
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        // Add other providers here later (e.g., TreatmentProvider, AppointmentProvider)
+        ChangeNotifierProvider(create: (_) => MedicationProvider()), // Add MedicationProvider
+        // Add other providers here later (e.g., AppointmentProvider)
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -38,49 +41,19 @@ class MyApp extends StatelessWidget {
         ],
         onGenerateTitle: (BuildContext context) => AppLocalizations.of(context)!.appTitle,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal), // Changed seed color for variety
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
           useMaterial3: true,
         ),
         // TODO: Implement routing and initial screen logic based on auth state
-        home: const PlaceholderAuthScreen(), // Placeholder for auth/home screen logic
+        // For now, directly show the main navigation screen
+        // Later, this will depend on authProvider.isAuthenticated
+        home: const MainNavigationScreen(), // Show main navigation for now
       ),
     );
   }
 }
 
-// Placeholder screen - will be replaced by actual login/signup or home screen based on auth state
-class PlaceholderAuthScreen extends StatelessWidget {
-  const PlaceholderAuthScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    // Example of accessing the provider (though not used yet)
-    final authProvider = Provider.of<AuthProvider>(context);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.appTitle),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Écran d\'authentification/accueil (Placeholder)'),
-            const SizedBox(height: 20),
-            // Example button using the provider (placeholder action)
-            ElevatedButton(
-              onPressed: () => authProvider.signIn('test@example.com', 'password'),
-              child: const Text('Test Connexion (Placeholder)'),
-            ),
-            ElevatedButton(
-              onPressed: () => authProvider.signOut(),
-              child: const Text('Test Déconnexion (Placeholder)'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// PlaceholderAuthScreen is removed as we now directly show MainNavigationScreen
+// The logic to show Login/Signup or MainNavigationScreen will be added later
+// based on the authentication state from AuthProvider.
 
