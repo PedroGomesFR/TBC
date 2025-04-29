@@ -1,11 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:mytuberculose_app/data/models/medication_model.dart';
+import 'package:mytuberculose_app/data/models/treatment_history_model.dart'; // Import history model
+import 'package:mytuberculose_app/data/repositories/treatment_history_repository.dart'; // Import history repo
+import 'package:mytuberculose_app/presentation/screens/treatment_history_screen.dart'; // Import history screen
 // TODO: Import AppLocalizations when needed
 
 class MedicationDetailScreen extends StatelessWidget {
   final Medication medication;
+  final TreatmentHistoryRepository _historyRepository = TreatmentHistoryRepository(); // Instantiate repo
 
-  const MedicationDetailScreen({super.key, required this.medication});
+  MedicationDetailScreen({super.key, required this.medication});
+
+  // Function to add a history record
+  Future<void> _addHistoryRecord(BuildContext context, TreatmentStatus status) async {
+    try {
+      final newRecord = TreatmentHistory(
+        medicationId: medication.id!, // Assume medication has an ID from DB
+        date: DateTime.now(),
+        status: status,
+        // TODO: Add option to include notes?
+      );
+      await _historyRepository.addTreatmentHistory(newRecord);
+      // Show confirmation
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Prise marquée comme ${_getStatusText(status)}')), // Localize
+      );
+    } catch (e) {
+      print("Error adding history record: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de l\"enregistrement: $e')), // Localize
+      );
+    }
+  }
+
+  // Helper to get status text (duplicate from history screen, consider moving to model or utils)
+  String _getStatusText(TreatmentStatus status) {
+    switch (status) {
+      case TreatmentStatus.taken: return 'Pris';
+      case TreatmentStatus.skipped: return 'Oublié';
+      case TreatmentStatus.reported: return 'Signalé';
+      case TreatmentStatus.pending: return 'En attente';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -14,13 +50,26 @@ class MedicationDetailScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(medication.name),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_outlined),
+            tooltip: 'Voir l\'historique pour ce médicament', // Localize
+            onPressed: medication.id == null ? null : () { // Disable if medication ID is null (not from DB)
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TreatmentHistoryScreen(medicationId: medication.id!),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // TODO: Display medication photo (medication.photoPath)
             Center(
               child: Icon(
                 Icons.medication_liquid, // Placeholder icon
@@ -41,8 +90,27 @@ class MedicationDetailScreen extends StatelessWidget {
             const Divider(height: 30),
             _buildSectionTitle(context, 'Interactions Médicamenteuses'),
             Text(medication.interactions ?? 'Aucune interaction connue listée.'),
-            // TODO: Add section for user notes?
-            // TODO: Add buttons for marking as taken/skipped/reported?
+            const Divider(height: 30),
+            // Buttons for marking status
+            if (medication.id != null) // Only show buttons if medication has an ID
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: const Text('Marquer Pris'), // Localize
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.green[100]),
+                    onPressed: () => _addHistoryRecord(context, TreatmentStatus.taken),
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('Marquer Oublié'), // Localize
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.red[100]),
+                    onPressed: () => _addHistoryRecord(context, TreatmentStatus.skipped),
+                  ),
+                  // TODO: Add 'Reported' button?
+                ],
+              ),
           ],
         ),
       ),
