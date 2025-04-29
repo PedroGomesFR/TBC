@@ -44,7 +44,6 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       } else {
         // Navigation to main app will be handled by the auth state listener in main.dart/splash screen
-        print("Login successful, auth state listener should navigate.");
       }
     }
   }

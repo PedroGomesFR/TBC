@@ -34,6 +34,20 @@ class TreatmentHistoryRepository {
     });
   }
 
+  // Get history since a specific date
+  Future<List<TreatmentHistory>> getHistorySince(DateTime startDate) async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      "treatment_history",
+      where: "date >= ?",
+      whereArgs: [startDate.toIso8601String()],
+      orderBy: "date DESC",
+    );
+    return List.generate(maps.length, (i) {
+      return TreatmentHistory.fromMap(maps[i]);
+    });
+  }
+
   // Get history for a specific date range
   Future<List<TreatmentHistory>> getHistoryForDateRange(DateTime start, DateTime end) async {
     final db = await _dbHelper.database;
@@ -56,6 +70,19 @@ class TreatmentHistoryRepository {
       history.toMap(),
       where: "id = ?",
       whereArgs: [history.id],
+    );
+  }
+
+  // Update only the notes for a specific history record
+  Future<int> updateHistoryNotes(int id, String? notes) async {
+    final db = await _dbHelper.database;
+    return await db.update(
+      "treatment_history",
+      {
+        "notes": notes // Update only the notes field
+      },
+      where: "id = ?",
+      whereArgs: [id],
     );
   }
 

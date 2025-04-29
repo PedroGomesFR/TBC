@@ -23,7 +23,6 @@ class MedicationProvider with ChangeNotifier {
     try {
       _medications = await _repository.getAllMedications();
     } catch (e) {
-      print("Error fetching medications: $e");
       // Handle error appropriately
     } finally {
       _isLoading = false;
@@ -36,7 +35,6 @@ class MedicationProvider with ChangeNotifier {
       await _repository.addMedication(medication);
       await fetchMedications(); // Refresh the list after adding
     } catch (e) {
-      print("Error adding medication: $e");
       // Handle error appropriately
     }
   }
@@ -46,7 +44,6 @@ class MedicationProvider with ChangeNotifier {
       await _repository.updateMedication(medication);
       await fetchMedications(); // Refresh the list after updating
     } catch (e) {
-      print("Error updating medication: $e");
       // Handle error appropriately
     }
   }
@@ -68,10 +65,8 @@ class MedicationProvider with ChangeNotifier {
       // 3. Refresh medication list to show updated stock
       await fetchMedications();
 
-      print("Medication ID $medicationId marked as taken, stock decremented.");
 
     } catch (e) {
-      print("Error marking medication taken: $e");
       // Handle error appropriately
     }
   }
@@ -87,9 +82,7 @@ class MedicationProvider with ChangeNotifier {
       await _historyRepository.addTreatmentHistory(historyRecord);
       // No stock change for skipped doses
       // No need to fetchMedications unless history influences the main list display
-      print("Medication ID $medicationId marked as skipped.");
     } catch (e) {
-      print("Error marking medication skipped: $e");
       // Handle error appropriately
     }
   }
@@ -99,7 +92,6 @@ class MedicationProvider with ChangeNotifier {
       await _repository.deleteMedication(id);
       await fetchMedications(); // Refresh the list after deleting
     } catch (e) {
-      print("Error deleting medication: $e");
       // Handle error appropriately
     }
   }

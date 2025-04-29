@@ -60,7 +60,6 @@ class MedicationRepository {
         whereArgs: [id],
       );
     } else {
-      print("Cannot decrement stock for medication ID $id: Not found or stock is null/zero.");
       return 0; // Indicate no update occurred
     }
   }

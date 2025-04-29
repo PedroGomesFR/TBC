@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Import shared_preferences
+
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mytuberculose_app/data/models/quiz_model.dart';
 // TODO: Import AppLocalizations when needed
 
@@ -15,8 +15,11 @@ class _QuizScreenState extends State<QuizScreen> {
   int _currentQuestionIndex = 0;
   int _score = 0;
   bool _quizCompleted = false;
-  List<int?> _selectedAnswers = []; // Store index of selected answer for each question
+  // Store selected indices for the current question. Use Set for multi-choice.
+  Set<int> _selectedOptionIndices = {}; 
   int? _highScore;
+  // Store user's answers for review later (optional)
+  // Map<int, Set<int>> _userAnswers = {}; 
 
   @override
   void initState() {
@@ -26,10 +29,11 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void _resetQuizState() {
-    _selectedAnswers = List<int?>.filled(quizQuestions.length, null);
     _currentQuestionIndex = 0;
     _score = 0;
     _quizCompleted = false;
+    _selectedOptionIndices = {};
+    // _userAnswers = {};
   }
 
   Future<void> _loadHighScore() async {
@@ -41,48 +45,64 @@ class _QuizScreenState extends State<QuizScreen> {
 
   Future<void> _saveScoreAndMaybeUpdateHighScore() async {
     final prefs = await SharedPreferences.getInstance();
-    // Save current score (optional, could just save high score)
-    // await prefs.setInt('lastQuizScore', _score);
-
-    // Update high score if current score is better
     if (_highScore == null || _score > _highScore!) {
       await prefs.setInt('quizHighScore', _score);
       setState(() {
         _highScore = _score;
       });
-      print('New high score saved: $_score');
     } else {
-      print('Score saved: $_score (High score: $_highScore)');
     }
   }
 
-  void _answerQuestion(int selectedOptionIndex) {
-    if (_quizCompleted) return; // Don't process if quiz is done
-
+  void _handleOptionSelection(int optionIndex, bool isMultiChoice) {
     setState(() {
-      _selectedAnswers[_currentQuestionIndex] = selectedOptionIndex;
-      // Basic scoring: +1 if the selected option is marked as correct.
-      // Needs refinement for questions with multiple correct answers.
-      if (quizQuestions[_currentQuestionIndex].options[selectedOptionIndex].isCorrect) {
-         // Check if *all* correct answers are selected and *no* incorrect ones are for multi-answer questions.
-         // For simplicity now, just check if *this* selected one is correct.
-         bool isMultiAnswer = quizQuestions[_currentQuestionIndex].options.where((o) => o.isCorrect).length > 1;
-         if (!isMultiAnswer) {
-            _score++;
-         } else {
-            // Basic handling for multi-answer: give point only if this specific one is correct.
-            // A better approach would track all selections for the question.
-            _score++; // Needs better logic for multi-select scoring
-         }
+      if (isMultiChoice) {
+        if (_selectedOptionIndices.contains(optionIndex)) {
+          _selectedOptionIndices.remove(optionIndex);
+        } else {
+          _selectedOptionIndices.add(optionIndex);
+        }
+      } else {
+        // Single choice: clear previous and set new selection
+        _selectedOptionIndices = {optionIndex};
+        // For single choice, we can proceed immediately or wait for a next button
+        // Let's add a next button for consistency
       }
+    });
+  }
 
-      // Move to the next question or finish the quiz
+  void _submitAnswer() {
+    if (_quizCompleted) return;
+
+    final question = quizQuestions[_currentQuestionIndex];
+    final correctIndices = question.options
+        .asMap()
+        .entries
+        .where((entry) => entry.value.isCorrect)
+        .map((entry) => entry.key)
+        .toSet();
+
+    bool isAnswerCorrect = false;
+    if (correctIndices.length == _selectedOptionIndices.length &&
+        correctIndices.containsAll(_selectedOptionIndices)) {
+      isAnswerCorrect = true;
+    }
+
+    if (isAnswerCorrect) {
+      _score++;
+    }
+
+    // Store user answer for review (optional)
+    // _userAnswers[_currentQuestionIndex] = Set.from(_selectedOptionIndices);
+
+    // Move to the next question or finish the quiz
+    setState(() {
+       _selectedOptionIndices = {}; // Clear selection for next question
       if (_currentQuestionIndex < quizQuestions.length - 1) {
         _currentQuestionIndex++;
       } else {
         _quizCompleted = true;
-        _saveScoreAndMaybeUpdateHighScore(); // Save score when quiz finishes
-        print('Quiz completed! Score: $_score / ${quizQuestions.length}');
+        _saveScoreAndMaybeUpdateHighScore();
       }
     });
   }
@@ -112,10 +132,11 @@ class _QuizScreenState extends State<QuizScreen> {
       return const Center(child: Text('Aucune question de quiz chargée.'));
     }
     if (_currentQuestionIndex >= quizQuestions.length) {
-       return const Center(child: Text('Erreur : Index de question invalide.')); // Should not happen
+      return const Center(child: Text('Erreur : Index de question invalide.'));
     }
 
     final question = quizQuestions[_currentQuestionIndex];
+    final bool isMultiChoice = question.options.where((o) => o.isCorrect).length > 1;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -127,26 +148,48 @@ class _QuizScreenState extends State<QuizScreen> {
             style: Theme.of(context).textTheme.headlineSmall,
             textAlign: TextAlign.center,
           ),
+          const SizedBox(height: 10),
+          if (isMultiChoice)
+            Text(
+              '(Plusieurs réponses possibles)',
+              style: Theme.of(context).textTheme.bodySmall,
+              textAlign: TextAlign.center,
+            ),
           const SizedBox(height: 20),
           Text(
             question.questionText,
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 20),
+          // Use CheckboxListTile for multi-choice, RadioListTile for single-choice
           ...question.options.asMap().entries.map((entry) {
             int idx = entry.key;
             QuizOption option = entry.value;
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  // TODO: Add visual feedback for selected answer if needed before moving next
-                ),
-                onPressed: () => _answerQuestion(idx),
-                child: Text(option.optionText, textAlign: TextAlign.center),
-              ),
-            );
+            return isMultiChoice
+                ? CheckboxListTile(
+                    title: Text(option.optionText),
+                    value: _selectedOptionIndices.contains(idx),
+                    onChanged: (bool? value) {
+                      _handleOptionSelection(idx, true);
+                    },
+                  )
+                : RadioListTile<int>(
+                    title: Text(option.optionText),
+                    value: idx,
+                    groupValue: _selectedOptionIndices.isNotEmpty ? _selectedOptionIndices.first : null,
+                    onChanged: (int? value) {
+                       if (value != null) {
+                         _handleOptionSelection(value, false);
+                       }
+                    },
+                  );
           }).toList(),
+          const SizedBox(height: 30),
+          ElevatedButton(
+            // Disable button if no option is selected
+            onPressed: _selectedOptionIndices.isNotEmpty ? _submitAnswer : null, 
+            child: Text(_currentQuestionIndex < quizQuestions.length - 1 ? 'Suivant' : 'Terminer'),
+          ),
           // TODO: Add explanation display after answering?
         ],
       ),
@@ -183,7 +226,16 @@ class _QuizScreenState extends State<QuizScreen> {
               onPressed: _resetQuiz,
               child: const Text('Recommencer le Quiz'),
             ),
-            // TODO: Button to go back or close
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: () {
+                // Navigate back or to another screen
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Retour'),
+            )
           ],
         ),
       ),

@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
+import 'package:mytuberculose_app/presentation/screens/auth/login_screen.dart'; // Import login screen for navigation
 // TODO: Import AppLocalizations when needed
+// TODO: Import screens for navigation (Edit Profile, Settings, etc.)
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Get actual user data from AuthProvider/Supabase later
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    const String userName = "Utilisateur Exemple"; // Placeholder
-    const String userEmail = "utilisateur@example.com"; // Placeholder
+    // Listen to AuthProvider for user changes
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.currentUser;
+
+    // Use user data if available, otherwise placeholders
+    final String userName = user?.userMetadata?['full_name'] ?? user?.email?.split('@')[0] ?? "Utilisateur"; // Placeholder logic
+    final String userEmail = user?.email ?? "non connecté"; // Placeholder logic
 
     // TODO: Localize titles and labels
     return Scaffold(
@@ -22,11 +27,13 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Déconnexion',
-            onPressed: () {
-              // Placeholder action - actual logout needs Supabase
-              authProvider.signOut();
-              // TODO: Navigate back to login screen after logout
-              print("Logout button pressed (placeholder)");
+            onPressed: () async {
+              await authProvider.signOut();
+              // Navigate to login screen and remove all previous routes
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+                (Route<dynamic> route) => false, // Remove all routes
+              );
             },
           ),
         ],
@@ -34,10 +41,15 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         children: <Widget>[
           const SizedBox(height: 20),
-          const CircleAvatar(
+          // TODO: Add user profile picture later (fetch from profile data)
+          CircleAvatar(
             radius: 50,
-            // TODO: Add user profile picture later
-            child: Icon(Icons.person, size: 50),
+            backgroundColor: Colors.grey[300],
+            child: Text(
+              userName.isNotEmpty ? userName[0].toUpperCase() : 'U', // Display first initial
+              style: TextStyle(fontSize: 40, color: Colors.grey[700]),
+            ),
+            // child: Icon(Icons.person, size: 50),
           ),
           const SizedBox(height: 10),
           Center(
@@ -60,7 +72,7 @@ class ProfileScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: Navigate to Edit Profile Screen
-              print('Edit profile tapped');
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => EditProfileScreen()));
             },
           ),
           ListTile(
@@ -69,7 +81,7 @@ class ProfileScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: Navigate to Doctor Linking Screen (Task 5.1)
-              print('Link doctor tapped');
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => DoctorLinkScreen()));
             },
           ),
           ListTile(
@@ -77,8 +89,8 @@ class ProfileScreen extends StatelessWidget {
             title: const Text('Paramètres'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // TODO: Navigate to Settings Screen (notifications, language, etc.)
-              print('Settings tapped');
+              // TODO: Navigate to Settings Screen (notifications, language, theme, etc.)
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => SettingsScreen()));
             },
           ),
           ListTile(
@@ -87,7 +99,7 @@ class ProfileScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: Navigate to Help/Support Screen or show dialog
-              print('Help tapped');
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => HelpScreen()));
             },
           ),
           ListTile(
@@ -96,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: Navigate to About Screen
-              print('About tapped');
+              // Navigator.push(context, MaterialPageRoute(builder: (context) => AboutScreen()));
             },
           ),
           const Divider(),

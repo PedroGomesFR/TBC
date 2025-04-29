@@ -19,6 +19,49 @@ class QuizOption {
   QuizOption({required this.optionText, required this.isCorrect});
 }
 
+// Define the correct answers based on user input (0-based index: A=0, B=1, C=2, D=3)
+const List<List<int>> correctAnswersList = [
+  [1], // Q1: B
+  [0, 2], // Q2: A, C
+  [0, 1, 3], // Q3: A, B, D
+  [1], // Q4: B
+  [0], // Q5: A
+  [0, 2], // Q6: A, C
+  [2], // Q7: C
+  [1], // Q8: B
+  [0, 1, 2], // Q9: A, B, C
+  [0, 1], // Q10: A, B
+  [0], // Q11: A
+  [0, 1, 2], // Q12: A, B, C
+  [1], // Q13: B
+  [1], // Q14: B
+  [0, 1], // Q15: A, B
+  [2], // Q16: C
+  [1], // Q17: B
+  [1], // Q18: B
+  [1], // Q19: B
+  [0, 1], // Q20: A, B
+  [1], // Q21: B
+  [2], // Q22: C
+  [0, 2, 3], // Q23: A, C, D
+  [1], // Q24: B
+  [2], // Q25: C
+  [1], // Q26: B
+  [0], // Q27: A
+  [2], // Q28: C
+  [0, 1], // Q29: A, B
+  [0], // Q30: A
+  [2], // Q31: C
+  [1], // Q32: B
+  [1], // Q33: B
+  [1], // Q34: B
+  [2], // Q35: C
+  [1], // Q36: B
+  [1], // Q37: B
+  [1], // Q38: B
+  [2], // Q39: C
+];
+
 // Parse the raw quiz text and populate the questions list
 List<QuizQuestion> parseQuizData(String rawData) {
   List<QuizQuestion> questions = [];
@@ -26,81 +69,39 @@ List<QuizQuestion> parseQuizData(String rawData) {
 
   for (String block in lines) {
     List<String> parts = block.trim().split('\n');
-    if (parts.length >= 2) { // Need at least a question and one option
+    if (parts.length >= 2) {
+      // Need at least a question and one option
       String questionText = parts[0].trim();
       List<QuizOption> options = [];
-      // Assuming the correct answer is marked somehow, or we need to define it.
-      // For now, let's assume the first option (B) for the first question is correct, etc.
-      // THIS IS A HUGE ASSUMPTION AND NEEDS CORRECTION BASED ON ACTUAL CORRECT ANSWERS
-      // Let's hardcode the correct answers based on common knowledge/context for now.
-      // A better approach would be to mark correct answers in the source file (e.g., with *) or provide a separate answer key.
-
-      // Hardcoded correct answers (indices: 0=A, 1=B, 2=C, 3=D)
-      // This is error-prone and needs verification!
-      const Map<int, int> correctAnswers = {
-        0: 1, // Q1: B
-        1: 0, // Q2: A (C is also true, but A is the primary definition)
-        2: 0, // Q3: A (B and D are also symptoms)
-        3: 1, // Q4: B
-        4: 0, // Q5: A
-        5: 0, // Q6: A (C is also used)
-        6: 2, // Q7: C
-        7: 3, // Q8: D (Sometimes 6 or 3)
-        8: 0, // Q9: A, B, C
-        9: 0, // Q10: A, B
-        10: 0, // Q11: A
-        11: 0, // Q12: A, B, C
-        12: 1, // Q13: B
-        13: 1, // Q14: B
-        14: 0, // Q15: A, B
-        15: 2, // Q16: C (App doesn't allow direct booking)
-        16: 1, // Q17: B
-        17: 1, // Q18: B
-        18: 1, // Q19: B
-        19: 0, // Q20: A, B, C
-        20: 1, // Q21: B
-        21: 2, // Q22: C
-        22: 2, // Q23: C (Email is usually required for account)
-        23: 1, // Q24: B
-        24: 2, // Q25: C (Not specified, but likely)
-        25: 1, // Q26: B
-        26: 0, // Q27: A
-        27: 1, // Q28: B (Assuming 40 questions based on context, needs clarification)
-        28: 1, // Q29: B
-        29: 0, // Q30: A
-        30: 2, // Q31: C
-        31: 1, // Q32: B
-        32: 1, // Q33: B
-        33: 1, // Q34: B
-        34: 2, // Q35: C
-        35: 1, // Q36: B
-        36: 1, // Q37: B
-        37: 1, // Q38: B
-        38: 2, // Q39: C (4500)
-      };
-
       int questionIndex = questions.length;
-      int? correctAnswerIndex = correctAnswers[questionIndex];
+
+      if (questionIndex >= correctAnswersList.length) {
+        // Handle error or default behavior if answers are missing
+        continue; // Skip this question if no answer data
+      }
+
+      List<int> correctIndices = correctAnswersList[questionIndex];
 
       for (int i = 1; i < parts.length; i++) {
         String optionLine = parts[i].trim();
-        if (optionLine.isNotEmpty && optionLine.length > 2 && optionLine[1] == '.') {
+        // Basic check for option format (e.g., "A. Text")
+        if (optionLine.isNotEmpty &&
+            optionLine.length > 2 &&
+            optionLine[1] == '.' &&
+            optionLine[0].toUpperCase().codeUnitAt(0) >= 'A'.codeUnitAt(0) &&
+            optionLine[0].toUpperCase().codeUnitAt(0) <= 'Z'.codeUnitAt(0)) {
           String optionText = optionLine.substring(3).trim();
-          // Determine if correct based on hardcoded map
-          bool isCorrect = (correctAnswerIndex != null && (i - 1) == correctAnswerIndex);
-          // Handle multiple correct answers (like Q3, Q9, Q10, Q12, Q15, Q20)
-          if (questionIndex == 2 && (i-1 == 0 || i-1 == 1 || i-1 == 3)) isCorrect = true; // Q3: A, B, D
-          if (questionIndex == 8 && (i-1 == 0 || i-1 == 1 || i-1 == 2)) isCorrect = true; // Q9: A, B, C
-          if (questionIndex == 9 && (i-1 == 0 || i-1 == 1)) isCorrect = true; // Q10: A, B
-          if (questionIndex == 11 && (i-1 == 0 || i-1 == 1 || i-1 == 2)) isCorrect = true; // Q12: A, B, C
-          if (questionIndex == 14 && (i-1 == 0 || i-1 == 1)) isCorrect = true; // Q15: A, B
-          if (questionIndex == 19 && (i-1 == 0 || i-1 == 1 || i-1 == 2)) isCorrect = true; // Q20: A, B, C
+          int optionIndex = i - 1; // 0-based index (A=0, B=1, etc.)
+
+          // Determine if this option is correct based on the provided list
+          bool isCorrect = correctIndices.contains(optionIndex);
 
           options.add(QuizOption(optionText: optionText, isCorrect: isCorrect));
         }
       }
       if (options.isNotEmpty) {
-        questions.add(QuizQuestion(questionText: questionText, options: options));
+        questions
+            .add(QuizQuestion(questionText: questionText, options: options));
       }
     }
   }
@@ -512,4 +513,3 @@ D. 5 000 €
 
 // Populate the list using the parser
 List<QuizQuestion> quizQuestions = parseQuizData(rawQuizContent);
-

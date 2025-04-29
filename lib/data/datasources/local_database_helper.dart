@@ -73,7 +73,6 @@ class DatabaseHelper {
     // TODO: Add table for reminders?
     // TODO: Add table for user profile?
 
-    print("Database tables created");
 
     // TODO: Optionally pre-populate medications table here if needed
     // await _prepopulateMedications(db);
@@ -94,7 +93,6 @@ class DatabaseHelper {
   //     "stock": 30
   //   });
   //   // Add other standard TB meds
-  //   print("Medications table prepopulated");
   // }
 
   // TODO: Implement _onUpgrade if schema changes in future versions

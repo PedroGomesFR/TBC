@@ -23,7 +23,6 @@ Future<void> main() async {
     url: 'https://snfeishlpfcovfldzfgv.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmVpc2hscGZjb3ZmbGR6Zmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MjU4MTEsImV4cCI6MjA2MTQwMTgxMX0.DOgNsp73x8grE7WEg0_BPXs1PDyO1-0vqTSBhVaet6o',
   );
-  print("Supabase initialized!");
 
   runApp(const MyApp());
 }

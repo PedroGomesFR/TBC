@@ -189,7 +189,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     } else {
                       // Fallback if cannot pop (e.g., deep linked)
                       // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-                      print('Navigate back to Login');
                     }
                   },
                   child: const Text('Déjà un compte ? Connectez-vous'),

@@ -22,19 +22,15 @@ class UserProfileRepository {
       } else if (userType == 'doctor') {
         return DoctorProfile.fromMap(response);
       } else {
-        print('Unknown user type for user $userId: $userType');
         return null;
       }
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
-        print('No profile found for user $userId');
         return null;
       } else {
-        print('Error fetching profile for user $userId: ${e.message}');
         rethrow;
       }
     } catch (e) {
-      print('Unexpected error fetching profile for user $userId: $e');
       rethrow;
     }
   }
@@ -43,9 +39,7 @@ class UserProfileRepository {
   Future<void> upsertUserProfile(UserProfile profile) async {
     try {
       await _supabase.from(_tableName).upsert(profile.toMap());
-      print('Profile upserted successfully for user ${profile.id}');
     } catch (e) {
-      print('Error upserting profile for user ${profile.id}: $e');
       rethrow;
     }
   }
@@ -57,9 +51,7 @@ class UserProfileRepository {
           .from(_tableName)
           .update(updates)
           .eq('id', userId);
-      print('Profile updated successfully for user $userId');
     } catch (e) {
-      print('Error updating profile for user $userId: $e');
       rethrow;
     }
   }
@@ -95,7 +87,6 @@ class UserProfileRepository {
       } while (codeExists && attempts < maxAttempts);
 
       if (codeExists) {
-        print('Failed to generate a unique linking code after $maxAttempts attempts.');
         return null; // Indicate failure
       }
 
@@ -105,10 +96,8 @@ class UserProfileRepository {
           .eq('id', doctorId)
           .eq('user_type', 'doctor'); // Ensure it's a doctor
       
-      print('Generated new linking code $newCode for doctor $doctorId');
       return newCode;
     } catch (e) {
-      print('Error generating linking code for doctor $doctorId: $e');
       return null;
     }
   }
@@ -127,11 +116,9 @@ class UserProfileRepository {
       if (response.isNotEmpty) {
         return DoctorProfile.fromMap(response.first);
       } else {
-        print('No doctor found with linking code $code');
         return null;
       }
     } catch (e) {
-      print('Error finding doctor by linking code $code: $e');
       return null;
     }
   }
@@ -144,10 +131,8 @@ class UserProfileRepository {
           .update({'linked_doctor_id': doctorId})
           .eq('id', patientId)
           .eq('user_type', 'patient'); // Ensure it's a patient
-      print('Patient $patientId linked to doctor $doctorId');
       return true;
     } catch (e) {
-      print('Error linking patient $patientId to doctor $doctorId: $e');
       return false;
     }
   }
@@ -160,10 +145,8 @@ class UserProfileRepository {
           .update({'linked_doctor_id': null})
           .eq('id', patientId)
           .eq('user_type', 'patient');
-      print('Patient $patientId unlinked from doctor');
       return true;
     } catch (e) {
-      print('Error unlinking patient $patientId: $e');
       return false;
     }
   }

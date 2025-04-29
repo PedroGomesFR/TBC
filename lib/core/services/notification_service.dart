@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
-  static final NotificationService _notificationService = NotificationService._internal();
+  static final NotificationService _notificationService =
+      NotificationService._internal();
 
   factory NotificationService() {
     return _notificationService;
@@ -11,20 +13,30 @@ class NotificationService {
 
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
     // Initialize timezone database
     tz.initializeTimeZones();
-    // TODO: Get the local timezone
-    // tz.setLocalLocation(tz.getLocation('Europe/Paris')); // Example, get dynamically
+    // TODO: Get the local timezone dynamically if possible
+    try {
+      // Attempt to get the local timezone name
+      // Note: This might not be perfectly reliable on all platforms or configurations.
+      // tz.setLocalLocation(tz.getLocation(DateTime.now().timeZoneName));
+      // Fallback to a common timezone if needed
+      tz.setLocalLocation(tz.getLocation('Europe/Paris')); // Example fallback
+    } catch (e) {
+      tz.setLocalLocation(tz.UTC); // Absolute fallback
+    }
 
     // Android initialization settings
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher'); // Default icon
 
     // iOS initialization settings
-    const DarwinInitializationSettings initializationSettingsIOS = DarwinInitializationSettings(
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -36,7 +48,8 @@ class NotificationService {
     //   defaultActionName: 'Open notification',
     // );
 
-    final InitializationSettings initializationSettings = InitializationSettings(
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
       android: initializationSettingsAndroid,
       iOS: initializationSettingsIOS,
       // linux: initializationSettingsLinux,
@@ -49,8 +62,6 @@ class NotificationService {
 
     // Request permissions for iOS and Android 13+
     await _requestPermissions();
-
-    print("Notification Service Initialized");
   }
 
   Future<void> _requestPermissions() async {
@@ -72,39 +83,50 @@ class NotificationService {
     // );
   }
 
-  // --- Placeholder Methods for Scheduling --- 
+  // --- Notification Details --- (Define common details)
 
-  // Example: Schedule a daily reminder for a medication
+  NotificationDetails _getPlatformDetails(String channelId, String channelName,
+      {String? channelDescription}) {
+    AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      channelId, // Channel ID
+      channelName, // Channel Name
+      channelDescription:
+          channelDescription ?? 'Notifications pour $channelName',
+      importance: Importance.max,
+      priority: Priority.high,
+      ticker: 'ticker',
+      // TODO: Add sound, vibration options if needed
+    );
+
+    DarwinNotificationDetails iosDetails = const DarwinNotificationDetails(
+      // TODO: Add sound options if needed
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+
+    return NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+  }
+
+  // --- Scheduling Methods ---
+
+  // Schedule a daily reminder for a medication
   Future<void> scheduleDailyMedicationReminder({
     required int id, // Unique ID for the notification
     required String title,
     required String body,
     required TimeOfDay time, // Time of day for the reminder
+    String? payload,
   }) async {
     try {
       final tz.TZDateTime scheduledDate = _nextInstanceOfTime(time);
-      
-      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-        'medication_reminders_channel', // Channel ID
-        'Rappels Médicaments', // Channel Name
-        channelDescription: 'Notifications pour les rappels de prise de médicaments',
-        importance: Importance.max,
-        priority: Priority.high,
-        ticker: 'ticker',
-        // TODO: Add sound, vibration options if needed
-      );
-
-      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-        // TODO: Add sound options if needed
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-      );
-
-      const NotificationDetails platformDetails = NotificationDetails(
-        android: androidDetails,
-        iOS: iosDetails,
-      );
+      final platformDetails = _getPlatformDetails(
+          'medication_reminders_channel', 'Rappels Médicaments',
+          channelDescription:
+              'Notifications pour les rappels de prise de médicaments');
 
       await flutterLocalNotificationsPlugin.zonedSchedule(
         id,
@@ -112,14 +134,65 @@ class NotificationService {
         body,
         scheduledDate,
         platformDetails,
+        payload: payload,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        matchDateTimeComponents: DateTimeComponents.time, // Repeat daily at the specified time
+        matchDateTimeComponents:
+            DateTimeComponents.time, // Répète chaque jour à la même heure
       );
-      print("Scheduled daily notification $id at $time");
-    } catch (e) {
-      print("Error scheduling notification: $e");
-    }
+    } catch (e) {}
+  }
+
+  // Schedule a one-time notification for a specific date and time
+  Future<void> scheduleNotification({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledDate,
+    String? payload,
+  }) async {
+    try {
+      final tz.TZDateTime tzScheduledDate =
+          tz.TZDateTime.from(scheduledDate, tz.local);
+      final platformDetails = _getPlatformDetails(
+          'general_notifications_channel', 'Notifications Générales');
+
+      // Ensure the scheduled date is in the future
+      if (tzScheduledDate.isBefore(tz.TZDateTime.now(tz.local))) {
+        return; // Don't schedule notifications for the past
+      }
+
+      await flutterLocalNotificationsPlugin.zonedSchedule(
+        id,
+        title,
+        body,
+        tzScheduledDate,
+        platformDetails,
+        payload: payload,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } catch (e) {}
+  }
+
+  // Show an immediate notification
+  Future<void> showNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    try {
+      final platformDetails = _getPlatformDetails(
+          'alert_notifications_channel', // Use a different channel for alerts?
+          'Alertes Immédiates');
+      await flutterLocalNotificationsPlugin.show(
+        id,
+        title,
+        body,
+        platformDetails,
+        payload: payload,
+      );
+    } catch (e) {}
   }
 
   // Calculate the next instance of a specific time
@@ -142,29 +215,24 @@ class NotificationService {
   // Cancel a specific notification
   Future<void> cancelNotification(int id) async {
     await flutterLocalNotificationsPlugin.cancel(id);
-    print("Cancelled notification $id");
   }
 
   // Cancel all notifications
   Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
-    print("Cancelled all notifications");
   }
 
-  // --- Optional Callbacks --- 
+  // --- Optional Callbacks ---
 
   // void onDidReceiveLocalNotification(int id, String? title, String? body, String? payload) async {
   //   // Handle notification received while app is in foreground (iOS only)
-  //   print('iOS foreground notification received: $title');
   // }
 
   // void onDidReceiveNotificationResponse(NotificationResponse notificationResponse) async {
   //   final String? payload = notificationResponse.payload;
   //   if (notificationResponse.payload != null) {
-  //     print('Notification payload: $payload');
   //   }
   //   // Handle notification tap action here
   //   // e.g., navigate to a specific screen
   // }
 }
-

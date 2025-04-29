@@ -23,7 +23,7 @@ class TreatmentsScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.history_outlined),
-            tooltip: 'Voir tout l\'historique', // Localize
+            tooltip: 'Voir tout l\"historique', // Localize - Corrected escape
             onPressed: () {
               Navigator.push(
                 context,

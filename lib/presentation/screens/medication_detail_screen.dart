@@ -13,9 +13,17 @@ class MedicationDetailScreen extends StatelessWidget {
 
   // Function to add a history record
   Future<void> _addHistoryRecord(BuildContext context, TreatmentStatus status) async {
+    // Ensure medication has an ID before proceeding
+    if (medication.id == null) {
+       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Erreur: Impossible d\'enregistrer l\'historique pour un médicament non sauvegardé.')), // Localize
+      );
+      return;
+    }
+
     try {
       final newRecord = TreatmentHistory(
-        medicationId: medication.id!, // Assume medication has an ID from DB
+        medicationId: medication.id!, // Use medication ID
         date: DateTime.now(),
         status: status,
         // TODO: Add option to include notes?
@@ -26,9 +34,8 @@ class MedicationDetailScreen extends StatelessWidget {
         SnackBar(content: Text('Prise marquée comme ${_getStatusText(status)}')), // Localize
       );
     } catch (e) {
-      print("Error adding history record: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors de l\"enregistrement: $e')), // Localize
+        SnackBar(content: Text('Erreur lors de l\'enregistrement: $e')), // Localize - Corrected escape
       );
     }
   }
@@ -53,7 +60,7 @@ class MedicationDetailScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.history_outlined),
-            tooltip: 'Voir l\'historique pour ce médicament', // Localize
+            tooltip: 'Voir l\'historique pour ce médicament', // Localize - Corrected escape
             onPressed: medication.id == null ? null : () { // Disable if medication ID is null (not from DB)
               Navigator.push(
                 context,
@@ -81,8 +88,9 @@ class MedicationDetailScreen extends StatelessWidget {
             _buildDetailRow(context, 'Nom', medication.name),
             _buildDetailRow(context, 'Dosage', medication.dosage ?? 'Non spécifié'),
             _buildDetailRow(context, 'Fréquence', medication.frequency ?? 'Non spécifié'),
+            _buildDetailRow(context, 'Stock Restant', medication.stock?.toString() ?? 'Non suivi'), // Display stock
             const Divider(height: 30),
-            _buildSectionTitle(context, 'Instructions d\'utilisation'),
+            _buildSectionTitle(context, 'Instructions d\'utilisation'), // Corrected escape
             Text(medication.instructions ?? 'Aucune instruction spécifique.'),
             const Divider(height: 30),
             _buildSectionTitle(context, 'Effets Secondaires Possibles'),

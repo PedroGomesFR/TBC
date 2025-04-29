@@ -1,5 +1,30 @@
 import 'package:flutter/material.dart';
 
+class MedicationWithReminders extends Medication {
+  final List<String>? reminderTimes;
+
+  MedicationWithReminders({
+    int? id,
+    required String name,
+    String? dosage,
+    String? frequency,
+    String? instructions,
+    String? sideEffects,
+    String? interactions,
+    int? stock,
+    this.reminderTimes,
+  }) : super(
+          id: id,
+          name: name,
+          dosage: dosage,
+          frequency: frequency,
+          instructions: instructions,
+          sideEffects: sideEffects,
+          interactions: interactions,
+          stock: stock,
+        );
+}
+
 // Basic model for a medication
 class Medication {
   final int? id; // Nullable for new medications not yet in DB
@@ -57,4 +82,3 @@ class Medication {
     return 'Medication{id: $id, name: $name, stock: $stock}';
   }
 }
-

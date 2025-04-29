@@ -20,7 +20,6 @@ class AppointmentProvider with ChangeNotifier {
     try {
       _appointments = await _repository.getAllAppointments();
     } catch (e) {
-      print("Error fetching appointments: $e");
       // Handle error appropriately
     } finally {
       _isLoading = false;
@@ -33,7 +32,6 @@ class AppointmentProvider with ChangeNotifier {
       await _repository.addAppointment(appointment);
       await fetchAppointments(); // Refresh the list after adding
     } catch (e) {
-      print("Error adding appointment: $e");
       // Handle error appropriately
     }
   }
@@ -43,7 +41,6 @@ class AppointmentProvider with ChangeNotifier {
       await _repository.updateAppointment(appointment);
       await fetchAppointments(); // Refresh the list after updating
     } catch (e) {
-      print("Error updating appointment: $e");
       // Handle error appropriately
     }
   }
@@ -53,7 +50,6 @@ class AppointmentProvider with ChangeNotifier {
       await _repository.deleteAppointment(id);
       await fetchAppointments(); // Refresh the list after deleting
     } catch (e) {
-      print("Error deleting appointment: $e");
       // Handle error appropriately
     }
   }
