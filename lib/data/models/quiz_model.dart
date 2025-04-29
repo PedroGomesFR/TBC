@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class QuizQuestion {
   final String questionText;
   final List<QuizOption> options;

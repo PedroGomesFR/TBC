@@ -1,11 +1,10 @@
-import 'package:flutter/material.dart';
-
 enum TreatmentStatus { taken, skipped, reported, pending }
 
 class TreatmentHistory {
   final int? id;
   final int medicationId;
-  final DateTime date; // Represents the specific time the status was recorded or the intended time
+  final DateTime
+      date; // Represents the specific time the status was recorded or the intended time
   final TreatmentStatus status;
   final String? notes;
 
@@ -36,7 +35,8 @@ class TreatmentHistory {
       date: DateTime.parse(map['date'] as String), // Parse ISO8601 string
       status: TreatmentStatus.values.firstWhere(
         (e) => e.toString().split('.').last == (map['status'] as String),
-        orElse: () => TreatmentStatus.pending, // Default if status string is invalid
+        orElse: () =>
+            TreatmentStatus.pending, // Default if status string is invalid
       ),
       notes: map['notes'] as String?,
     );
@@ -47,4 +47,3 @@ class TreatmentHistory {
     return 'TreatmentHistory{id: $id, medicationId: $medicationId, date: $date, status: $status}';
   }
 }
-

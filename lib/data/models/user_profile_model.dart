@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 // Base class for user profiles
 abstract class UserProfile {
   final String id; // Corresponds to Supabase Auth User ID
@@ -98,4 +96,3 @@ class DoctorProfile extends UserProfile {
     );
   }
 }
-

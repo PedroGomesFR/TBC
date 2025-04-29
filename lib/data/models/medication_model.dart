@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 class MedicationWithReminders extends Medication {
   final List<String>? reminderTimes;
 
