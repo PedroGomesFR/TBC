@@ -4,10 +4,11 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
 import 'package:mytuberculose_app/presentation/providers/medication_provider.dart';
+import 'package:mytuberculose_app/presentation/providers/reminder_provider.dart'; // Import ReminderProvider
 import 'package:mytuberculose_app/presentation/screens/main_navigation_screen.dart';
-import 'package:mytuberculose_app/core/services/notification_service.dart'; // Import NotificationService
+import 'package:mytuberculose_app/core/services/notification_service.dart';
 
-Future<void> main() async { // Make main async
+Future<void> main() async {
   // Ensure Flutter bindings are initialized
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
+        ChangeNotifierProvider(create: (_) => ReminderProvider()), // Add ReminderProvider
         // Add other providers here later (e.g., AppointmentProvider)
       ],
       child: MaterialApp(
