@@ -4,7 +4,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
 import 'package:mytuberculose_app/presentation/providers/medication_provider.dart';
-import 'package:mytuberculose_app/presentation/providers/reminder_provider.dart'; // Import ReminderProvider
+import 'package:mytuberculose_app/presentation/providers/reminder_provider.dart';
+import 'package:mytuberculose_app/presentation/providers/appointment_provider.dart'; // Import AppointmentProvider
 import 'package:mytuberculose_app/presentation/screens/main_navigation_screen.dart';
 import 'package:mytuberculose_app/core/services/notification_service.dart';
 
@@ -34,8 +35,8 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
-        ChangeNotifierProvider(create: (_) => ReminderProvider()), // Add ReminderProvider
-        // Add other providers here later (e.g., AppointmentProvider)
+        ChangeNotifierProvider(create: (_) => ReminderProvider()),
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()), // Add AppointmentProvider
       ],
       child: MaterialApp(
         localizationsDelegates: const [
