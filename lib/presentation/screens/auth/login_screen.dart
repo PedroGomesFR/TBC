@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-// TODO: Import AuthProvider, AppLocalizations, SignUpScreen
+import 'package:provider/provider.dart';
+import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
+import 'package:mytuberculose_app/presentation/screens/auth/signup_screen.dart';
+// TODO: Import AppLocalizations
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -26,22 +29,40 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
     setState(() { _isLoading = true; });
-    // TODO: Call AuthProvider.signInWithEmail
-    print('Email: ${_emailController.text}, Password: ${_passwordController.text}');
-    // Simulate network call
-    await Future.delayed(const Duration(seconds: 1));
-    // TODO: Handle success/error from provider
-    setState(() { _isLoading = false; });
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final error = await authProvider.signInWithEmail(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (mounted) {
+      setState(() { _isLoading = false; });
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur de connexion: $error')), // Localize
+        );
+      } else {
+        // Navigation to main app will be handled by the auth state listener in main.dart/splash screen
+        print("Login successful, auth state listener should navigate.");
+      }
+    }
   }
 
   Future<void> _signInWithGoogle() async {
     setState(() { _isLoading = true; });
-    // TODO: Call AuthProvider.signInWithGoogle
-    print('Signing in with Google...');
-    // Simulate network call
-    await Future.delayed(const Duration(seconds: 1));
-    // TODO: Handle success/error from provider
-    setState(() { _isLoading = false; });
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final error = await authProvider.signInWithGoogle();
+
+    if (mounted) {
+      setState(() { _isLoading = false; });
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur connexion Google: $error')), // Localize
+        );
+      }
+      // On successful initiation, Supabase handles the redirect and the auth listener updates the state.
+    }
   }
 
   @override
@@ -112,6 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
+                  // TODO: Use a proper Google logo asset
                   icon: const Icon(Icons.g_mobiledata), // Placeholder for Google icon
                   label: const Text('Se connecter avec Google'),
                   onPressed: _isLoading ? null : _signInWithGoogle,
@@ -124,9 +146,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
-                    // TODO: Navigate to SignUpScreen
-                    // Navigator.push(context, MaterialPageRoute(builder: (context) => const SignUpScreen()));
-                    print('Navigate to Sign Up');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+                    );
                   },
                   child: const Text('Pas encore de compte ? Inscrivez-vous'),
                 ),

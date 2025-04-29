@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-// TODO: Import AuthProvider, AppLocalizations, LoginScreen
+import 'package:provider/provider.dart';
+import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
+// TODO: Import AppLocalizations, LoginScreen
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -14,6 +16,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   // TODO: Add state for user type selection (Patient/Médecin)
+  String _userType = 'patient'; // Default to patient
   bool _isLoading = false;
 
   @override
@@ -35,13 +38,36 @@ class _SignUpScreenState extends State<SignUpScreen> {
       return;
     }
     setState(() { _isLoading = true; });
-    // TODO: Call AuthProvider.signUpWithEmail
-    print('Signing up Email: ${_emailController.text}, Password: ${_passwordController.text}');
-    // Simulate network call
-    await Future.delayed(const Duration(seconds: 1));
-    // TODO: Handle success/error from provider
-    // On success, maybe navigate to login or directly to main app
-    setState(() { _isLoading = false; });
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    // Include user type in metadata
+    final error = await authProvider.signUpWithEmail(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+      data: {'user_type': _userType},
+    );
+
+    if (mounted) {
+      setState(() { _isLoading = false; });
+      if (error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur d\"inscription: $error')), // Localize
+        );
+      } else {
+        // Show success message (e.g., check email for confirmation)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.')), // Localize
+        );
+        // Optionally navigate back to login after a delay or let user do it
+        if (Navigator.canPop(context)) {
+           Future.delayed(const Duration(seconds: 2), () {
+             if (mounted && Navigator.canPop(context)) {
+                Navigator.pop(context);
+             }
+           });
+        }
+      }
+    }
   }
 
   @override
@@ -67,6 +93,32 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
+                // User Type Selection
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text('Je suis un :', style: Theme.of(context).textTheme.titleMedium), // Localize
+                ),
+                RadioListTile<String>(
+                  title: const Text('Patient'), // Localize
+                  value: 'patient',
+                  groupValue: _userType,
+                  onChanged: (value) {
+                    setState(() {
+                      _userType = value!;
+                    });
+                  },
+                ),
+                RadioListTile<String>(
+                  title: const Text('Professionnel de santé'), // Localize
+                  value: 'doctor',
+                  groupValue: _userType,
+                  onChanged: (value) {
+                    setState(() {
+                      _userType = value!;
+                    });
+                  },
+                ),
+                const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
                   decoration: const InputDecoration(
@@ -117,7 +169,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     return null;
                   },
                 ),
-                // TODO: Add Radio buttons or Dropdown for user type (Patient/Médecin)
                 const SizedBox(height: 24),
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
@@ -136,7 +187,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
                     } else {
-                      // TODO: Navigate to LoginScreen if not popped
+                      // Fallback if cannot pop (e.g., deep linked)
                       // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
                       print('Navigate back to Login');
                     }
