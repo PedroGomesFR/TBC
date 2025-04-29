@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
 import 'package:mytuberculose_app/presentation/providers/medication_provider.dart';
 import 'package:mytuberculose_app/presentation/providers/reminder_provider.dart';
-import 'package:mytuberculose_app/presentation/providers/appointment_provider.dart'; // Import AppointmentProvider
+import 'package:mytuberculose_app/presentation/providers/appointment_provider.dart';
 import 'package:mytuberculose_app/presentation/screens/main_navigation_screen.dart';
 import 'package:mytuberculose_app/core/services/notification_service.dart';
+// TODO: Import login/splash screen later
 
 Future<void> main() async {
   // Ensure Flutter bindings are initialized
@@ -16,14 +18,18 @@ Future<void> main() async {
   // Initialize Notification Service
   await NotificationService().init();
 
-  // TODO: Initialize Supabase here when the key is available
-  // await Supabase.initialize(
-  //   url: 'YOUR_SUPABASE_URL', // Replace with actual URL
-  //   anonKey: 'YOUR_SUPABASE_ANON_KEY', // Replace with actual key
-  // );
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: 'https://snfeishlpfcovfldzfgv.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNuZmVpc2hscGZjb3ZmbGR6Zmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4MjU4MTEsImV4cCI6MjA2MTQwMTgxMX0.DOgNsp73x8grE7WEg0_BPXs1PDyO1-0vqTSBhVaet6o',
+  );
+  print("Supabase initialized!");
 
   runApp(const MyApp());
 }
+
+// Get a reference to the Supabase client
+final supabase = Supabase.instance.client;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -36,7 +42,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
         ChangeNotifierProvider(create: (_) => ReminderProvider()),
-        ChangeNotifierProvider(create: (_) => AppointmentProvider()), // Add AppointmentProvider
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -58,6 +64,18 @@ class MyApp extends StatelessWidget {
         // For now, directly show the main navigation screen
         // Later, this will depend on authProvider.isAuthenticated
         home: const MainNavigationScreen(), // Show main navigation for now
+        // Example using AuthProvider (needs splash/login screens):
+        // home: Consumer<AuthProvider>(
+        //   builder: (context, authProvider, _) {
+        //     if (authProvider.isLoading) {
+        //       return const SplashScreen(); // Show loading screen
+        //     } else if (authProvider.isAuthenticated) {
+        //       return const MainNavigationScreen(); // User is logged in
+        //     } else {
+        //       return const LoginScreen(); // User needs to log in
+        //     }
+        //   },
+        // ),
       ),
     );
   }
