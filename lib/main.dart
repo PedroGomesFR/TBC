@@ -3,16 +3,23 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:mytuberculose_app/presentation/providers/auth_provider.dart';
-import 'package:mytuberculose_app/presentation/providers/medication_provider.dart'; // Import MedicationProvider
-import 'package:mytuberculose_app/presentation/screens/main_navigation_screen.dart'; // Import Main Navigation
+import 'package:mytuberculose_app/presentation/providers/medication_provider.dart';
+import 'package:mytuberculose_app/presentation/screens/main_navigation_screen.dart';
+import 'package:mytuberculose_app/core/services/notification_service.dart'; // Import NotificationService
 
-void main() {
+Future<void> main() async { // Make main async
+  // Ensure Flutter bindings are initialized
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Notification Service
+  await NotificationService().init();
+
   // TODO: Initialize Supabase here when the key is available
-  // WidgetsFlutterBinding.ensureInitialized();
   // await Supabase.initialize(
   //   url: 'YOUR_SUPABASE_URL', // Replace with actual URL
   //   anonKey: 'YOUR_SUPABASE_ANON_KEY', // Replace with actual key
   // );
+
   runApp(const MyApp());
 }
 
@@ -25,7 +32,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => MedicationProvider()), // Add MedicationProvider
+        ChangeNotifierProvider(create: (_) => MedicationProvider()),
         // Add other providers here later (e.g., AppointmentProvider)
       ],
       child: MaterialApp(
@@ -52,8 +59,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-
-// PlaceholderAuthScreen is removed as we now directly show MainNavigationScreen
-// The logic to show Login/Signup or MainNavigationScreen will be added later
-// based on the authentication state from AuthProvider.
 
