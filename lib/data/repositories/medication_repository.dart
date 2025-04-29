@@ -1,76 +1,78 @@
 import 
-'package:mytuberculose_app/data/datasources/local_database_helper.dart';
-import 'package:mytuberculose_app/data/models/medication_model.dart';
+"package:mytuberculose_app/data/datasources/local_database_helper.dart";
+import "package:mytuberculose_app/data/models/medication_model.dart";
 
 class MedicationRepository {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
-  // Insert predefined medications into the database if they don't exist
-  Future<void> populateInitialMedications() async {
+  // Add a new medication
+  Future<int> addMedication(Medication medication) async {
     final db = await _dbHelper.database;
-    // Check if the table is empty before inserting
-    final List<Map<String, dynamic>> existing = await db.query('medications', limit: 1);
-    if (existing.isEmpty) {
-      print('Populating initial medications into the database...');
-      for (var med in predefinedMedications) {
-        await db.insert('medications', med.toMap());
-      }
-      print('Initial medications populated.');
-    }
+    return await db.insert("medications", medication.toMap());
   }
 
-  // Get all medications from the database
+  // Get all medications
   Future<List<Medication>> getAllMedications() async {
     final db = await _dbHelper.database;
-    final List<Map<String, dynamic>> maps = await db.query('medications');
-
-    // Convert the List<Map<String, dynamic> into a List<Medication>.
+    final List<Map<String, dynamic>> maps = await db.query("medications");
     return List.generate(maps.length, (i) {
       return Medication.fromMap(maps[i]);
     });
   }
 
-  // Insert a new medication
-  Future<int> insertMedication(Medication medication) async {
+  // Get a single medication by ID
+  Future<Medication?> getMedicationById(int id) async {
     final db = await _dbHelper.database;
-    // Use toMap to convert Medication object to Map for insertion
-    return await db.insert('medications', medication.toMap());
+    final List<Map<String, dynamic>> maps = await db.query(
+      "medications",
+      where: "id = ?",
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return Medication.fromMap(maps.first);
+    } else {
+      return null;
+    }
   }
 
   // Update a medication
   Future<int> updateMedication(Medication medication) async {
     final db = await _dbHelper.database;
     return await db.update(
-      'medications',
+      "medications",
       medication.toMap(),
-      where: 'id = ?',
+      where: "id = ?",
       whereArgs: [medication.id],
     );
+  }
+
+  // Decrement stock for a medication
+  Future<int> decrementMedicationStock(int id) async {
+    final db = await _dbHelper.database;
+    // Fetch current stock first
+    final currentMed = await getMedicationById(id);
+    if (currentMed != null && currentMed.stock != null && currentMed.stock! > 0) {
+      return await db.update(
+        "medications",
+        {"stock": currentMed.stock! - 1},
+        where: "id = ?",
+        whereArgs: [id],
+      );
+    } else {
+      print("Cannot decrement stock for medication ID $id: Not found or stock is null/zero.");
+      return 0; // Indicate no update occurred
+    }
   }
 
   // Delete a medication
   Future<int> deleteMedication(int id) async {
     final db = await _dbHelper.database;
     return await db.delete(
-      'medications',
-      where: 'id = ?',
+      "medications",
+      where: "id = ?",
       whereArgs: [id],
     );
-  }
-
-  // Get a single medication by ID (useful for detail view)
-  Future<Medication?> getMedicationById(int id) async {
-    final db = await _dbHelper.database;
-    List<Map<String, dynamic>> maps = await db.query(
-      'medications',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (maps.isNotEmpty) {
-      return Medication.fromMap(maps.first);
-    }
-    return null;
   }
 }
 

@@ -1,14 +1,13 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import "package:sqflite/sqflite.dart";
+import "package:path/path.dart";
+import "package:path_provider/path_provider.dart";
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
   factory DatabaseHelper() => _instance;
-  DatabaseHelper._internal();
-
   static Database? _database;
+
+  DatabaseHelper._internal();
 
   Future<Database> get database async {
     if (_database != null) return _database!;
@@ -17,8 +16,8 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDatabase() async {
-    Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'mytuberculose.db');
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final path = join(documentsDirectory.path, "mytuberculose.db");
     return await openDatabase(
       path,
       version: 1,
@@ -27,83 +26,82 @@ class DatabaseHelper {
     );
   }
 
-  // Create tables
   Future<void> _onCreate(Database db, int version) async {
-    // TODO: Define table schemas based on requirements (Phase 1, task 1.11)
-    // Example: Medications table
-    await db.execute('''
+    await db.execute("""
       CREATE TABLE medications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
         dosage TEXT,
-        photo_path TEXT, // Store path to locally saved image
         frequency TEXT,
         instructions TEXT,
-        side_effects TEXT,
-        interactions TEXT
+        sideEffects TEXT,
+        interactions TEXT,
+        stock INTEGER -- Added stock column
       )
-    ''');
+      """);
 
-    // Example: Treatment History table
-    await db.execute('''
+    await db.execute("""
       CREATE TABLE treatment_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        medication_id INTEGER,
+        medicationId INTEGER NOT NULL,
         date TEXT NOT NULL, -- Store as ISO8601 string
         status TEXT NOT NULL, -- e.g., 'taken', 'skipped', 'reported'
         notes TEXT,
-        FOREIGN KEY (medication_id) REFERENCES medications (id)
+        FOREIGN KEY (medicationId) REFERENCES medications (id) ON DELETE CASCADE
       )
-    ''');
+      """);
 
-    // Example: Appointments table
-    await db.execute('''
+    await db.execute("""
       CREATE TABLE appointments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL, -- e.g., 'medical_consultation', 'blood_test', 'clat_followup'
-        specialty TEXT, -- e.g., 'pneumologist', 'generalist'
+        type TEXT NOT NULL,
+        specialty TEXT,
         date TEXT NOT NULL, -- Store as ISO8601 string
         notes TEXT
       )
-    ''');
+      """);
 
-    // Example: Medication Stock table
-    await db.execute('''
-      CREATE TABLE medication_stock (
-        medication_id INTEGER PRIMARY KEY,
-        quantity INTEGER NOT NULL,
-        FOREIGN KEY (medication_id) REFERENCES medications (id)
-      )
-    ''');
-
-    // Example: Quiz Scores table
-    await db.execute('''
+    await db.execute("""
       CREATE TABLE quiz_scores (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL, -- Store as ISO8601 string
+        date TEXT NOT NULL,
         score INTEGER NOT NULL,
-        total_questions INTEGER NOT NULL
+        totalQuestions INTEGER NOT NULL
       )
-    ''');
+      """);
 
-    // Add other tables as needed (e.g., user_preferences, info_progress)
+    // TODO: Add table for reminders?
+    // TODO: Add table for user profile?
+
     print("Database tables created");
+
+    // TODO: Optionally pre-populate medications table here if needed
+    // await _prepopulateMedications(db);
   }
 
-  // --- CRUD Operations (Examples - to be implemented later) ---
+  // Example pre-population (adjust as needed)
+  // Future<void> _prepopulateMedications(Database db) async {
+  //   await db.insert("medications", {
+  //     "name": "Isoniazide",
+  //     "dosage": "300mg",
+  //     "frequency": "1 fois par jour",
+  //     "stock": 30 // Example initial stock
+  //   });
+  //   await db.insert("medications", {
+  //     "name": "Rifampicine",
+  //     "dosage": "600mg",
+  //     "frequency": "1 fois par jour",
+  //     "stock": 30
+  //   });
+  //   // Add other standard TB meds
+  //   print("Medications table prepopulated");
+  // }
 
-  // Example: Insert medication
-  Future<int> insertMedication(Map<String, dynamic> row) async {
-    Database db = await database;
-    return await db.insert('medications', row);
-  }
-
-  // Example: Query all medications
-  Future<List<Map<String, dynamic>>> queryAllMedications() async {
-    Database db = await database;
-    return await db.query('medications');
-  }
-
-  // Add more CRUD operations for other tables as features are developed
+  // TODO: Implement _onUpgrade if schema changes in future versions
+  // Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+  //   if (oldVersion < 2) {
+  //     // await db.execute("ALTER TABLE medications ADD COLUMN new_column TEXT;");
+  //   }
+  // }
 }
 
