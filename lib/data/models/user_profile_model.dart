@@ -61,7 +61,8 @@ class PatientProfile extends UserProfile {
 class DoctorProfile extends UserProfile {
   String? medicalId; // Professional ID
   String? specialty;
-  // List<String>? linkedPatientIds; // List of linked patient IDs
+  String? linkingCode; // Unique code for patients to link
+  // List<String>? linkedPatientIds; // List of linked patient IDs - Consider separate table for scalability
 
   DoctorProfile({
     required String id,
@@ -69,6 +70,7 @@ class DoctorProfile extends UserProfile {
     String? fullName,
     this.medicalId,
     this.specialty,
+    this.linkingCode,
     // this.linkedPatientIds,
   }) : super(id: id, email: email, userType: 'doctor', fullName: fullName);
 
@@ -78,6 +80,7 @@ class DoctorProfile extends UserProfile {
     map.addAll({
       'medical_id': medicalId,
       'specialty': specialty,
+      'linking_code': linkingCode,
       // 'linked_patient_ids': linkedPatientIds, // Store as JSONB or separate table?
     });
     return map;
@@ -90,6 +93,7 @@ class DoctorProfile extends UserProfile {
       fullName: map['full_name'] as String?,
       medicalId: map['medical_id'] as String?,
       specialty: map['specialty'] as String?,
+      linkingCode: map['linking_code'] as String?,
       // linkedPatientIds: (map['linked_patient_ids'] as List<dynamic>?)?.cast<String>(),
     );
   }
